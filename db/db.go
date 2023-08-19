@@ -10,7 +10,7 @@ import (
 var DB *gorm.DB
 
 func InitDB() {
-	connect := "root:123456@tcp(localhost:3306)/godb"
+	connect := "root:123456@tcp(localhost:3306)/godb?charset=utf8&parseTime=True&loc=Local"
 	db, err := gorm.Open("mysql", connect)
 	if err != nil {
 		log.Fatal(err)

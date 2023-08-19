@@ -23,13 +23,13 @@ type Comment struct {
 }
 
 type User struct {
-	Id            int64  `json:"id,omitempty"`
-	Token         string `json:-`
-	Name          string `json:"name,omitempty"`
+	Id            int64  `json:"id,omitempty"`       //唯一序号字段
+	Username      string `json:"username,omitempty"` //用户名（唯一）
+	Name          string `json:"name,omitempty"`     //用户昵称
 	FollowCount   int64  `json:"follow_count,omitempty"`
 	FollowerCount int64  `json:"follower_count,omitempty"`
 	IsFollow      bool   `json:"is_follow,omitempty"`
-	Password      string `json:"password,omitempty"`
+	Password      string `json:"password,omitempty"` //密码
 }
 
 type Message struct {
