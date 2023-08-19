@@ -1,4 +1,4 @@
-package controller
+package model
 
 type Response struct {
 	StatusCode int32  `json:"status_code"`
@@ -28,6 +28,7 @@ type User struct {
 	FollowCount   int64  `json:"follow_count,omitempty"`
 	FollowerCount int64  `json:"follower_count,omitempty"`
 	IsFollow      bool   `json:"is_follow,omitempty"`
+	Password      string `json:"password,omitempty"`
 }
 
 type Message struct {
