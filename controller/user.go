@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -25,32 +26,15 @@ import (
 //var userIdSequence = int64(1)
 
 type UserLoginResponse struct {
-	Response
+	model.Response
 	UserId int64  `json:"user_id,omitempty"`
 	Token  string `json:"token"`
 }
 
 type UserResponse struct {
-	Response
-	User User `json:"user"`
+	model.Response
+	User model.User `json:"user"`
 }
-
-var db *gorm.DB
-
-func init() {
-	username := "root"
-	password := "root"
-	host := "127.0.0.1"
-	port := 3306
-	Dbname := "gorm"
-
-	s := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username, password, host, port, Dbname)
-	db, _ = gorm.Open(mysql.Open(s), &gorm.Config{})
-
-	db.AutoMigrate(&User{})
-}
-
-var mutex sync.Mutex
 
 func Register(c *gin.Context) {
 	username := c.Query("username")
@@ -82,17 +66,17 @@ func Register(c *gin.Context) {
 
 	/*if _, exist := usersLoginInfo[token]; exist {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User already exist"},
+			Response: model.Response{StatusCode: 1, StatusMsg: "User already exist"},
 		})
 	} else {
 		atomic.AddInt64(&userIdSequence, 1)
-		newUser := User{
+		newUser := model.User{
 			Id:   userIdSequence,
 			Name: username,
 		}
 		usersLoginInfo[token] = newUser
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
+			Response: model.Response{StatusCode: 0},
 			UserId:   userIdSequence,
 			Token:    username + password,
 		})
@@ -120,13 +104,13 @@ func Login(c *gin.Context) {
 
 	/*if user, exist := usersLoginInfo[token]; exist {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
+			Response: model.Response{StatusCode: 0},
 			UserId:   user.Id,
 			Token:    token,
 		})
 	} else {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+			Response: model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 		})
 	}*/
 }
@@ -147,12 +131,12 @@ func UserInfo(c *gin.Context) {
 	}
 	/*if user, exist := usersLoginInfo[token]; exist {
 		c.JSON(http.StatusOK, UserResponse{
-			Response: Response{StatusCode: 0},
+			Response: model.Response{StatusCode: 0},
 			User:     user,
 		})
 	} else {
 		c.JSON(http.StatusOK, UserResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+			Response: model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 		})
 	}*/
 }
