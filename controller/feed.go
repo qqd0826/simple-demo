@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -17,7 +18,12 @@ type FeedResponse struct {
 func Feed(c *gin.Context) {
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  model.Response{StatusCode: 0},
-		VideoList: DemoVideos,
+		VideoList: getVideo(),
 		NextTime:  time.Now().Unix(),
 	})
+}
+
+func getVideo() (videos []model.Video) {
+	db.DB.Find(&videos)
+	return
 }

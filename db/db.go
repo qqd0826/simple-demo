@@ -10,7 +10,7 @@ import (
 var DB *gorm.DB
 
 func InitDB() {
-	connect := "root:123456@tcp(localhost:3306)/godb?charset=utf8&parseTime=True&loc=Local"
+	connect := "root:root@tcp(localhost:3306)/gorm?charset=utf8&parseTime=True&loc=Local"
 	db, err := gorm.Open("mysql", connect)
 	if err != nil {
 		log.Fatal(err)
@@ -20,6 +20,7 @@ func InitDB() {
 	DB.AutoMigrate(&model.User{})
 	// 这里可以继续添加其他需要迁移的表
 	// 若不存在数据库表会自动生成
+	DB.AutoMigrate(&model.Video{})
 }
 
 func CloseDB() {
