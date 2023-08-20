@@ -13,6 +13,7 @@ type Video struct {
 	FavoriteCount int64  `json:"favorite_count,omitempty"`
 	CommentCount  int64  `json:"comment_count,omitempty"`
 	IsFavorite    bool   `json:"is_favorite,omitempty"`
+	UpLoadTime    int64  // 额外加的上传时间，用于排序
 }
 
 type Comment struct {

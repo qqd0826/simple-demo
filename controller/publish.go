@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"path/filepath"
+	"time"
 )
 
 type VideoListResponse struct {
@@ -18,7 +19,7 @@ type VideoListResponse struct {
 func Publish(c *gin.Context) {
 	token := c.PostForm("token")
 
-	// 用户是否存在
+	// 用户是否存在，目前token就是用户名
 	user := model.User{}
 	res := db.DB.Where("username = ?", token).First(&user)
 	if res.Error != nil {
@@ -52,6 +53,15 @@ func Publish(c *gin.Context) {
 		return
 	}
 
+	// 保存到数据库
+	newVideo := model.Video{
+		Author:     user,
+		PlayUrl:    saveFile,
+		CoverUrl:   saveFile,
+		UpLoadTime: time.Now().Unix(),
+	}
+	db.DB.Create(&newVideo)
+
 	c.JSON(http.StatusOK, model.Response{
 		StatusCode: 0,
 		StatusMsg:  finalName + " uploaded successfully",
@@ -64,6 +74,6 @@ func PublishList(c *gin.Context) {
 		Response: model.Response{
 			StatusCode: 0,
 		},
-		VideoList: DemoVideos,
+		VideoList: getVideo(),
 	})
 }

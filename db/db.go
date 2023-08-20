@@ -20,6 +20,7 @@ func InitDB() {
 	DB.AutoMigrate(&model.User{})
 	// 这里可以继续添加其他需要迁移的表
 	// 若不存在数据库表会自动生成
+	DB.AutoMigrate(&model.Video{})
 }
 
 func CloseDB() {
