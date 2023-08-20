@@ -45,7 +45,7 @@ func Register(c *gin.Context) {
 
 	// 检验数据是否存在
 	user := model.User{}
-	if res := db.DB.Where("id = ?", username).First(&user); res.Error == nil {
+	if res := db.DB.Where("username = ?", username).First(&user); res.Error == nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: model.Response{StatusCode: 1, StatusMsg: "User already exist"},
 		})
