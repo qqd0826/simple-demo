@@ -12,6 +12,8 @@ import (
 
 var DB *gorm.DB
 
+var UserIdSequence int64
+
 func init() {
 	username := "root"
 	password := "salt"
@@ -32,6 +34,10 @@ func init() {
 
 	db.AutoMigrate(&User{})
 	DB = db
+
+	// get max id
+	DB.Raw("SELECT MAX(id) FROM users").Scan(&UserIdSequence)
+
 }
 
 // usersLoginInfo use map to store user info, and key is username+password for demo
@@ -46,8 +52,6 @@ var usersLoginInfo = map[string]User{
 		IsFollow:      true,
 	},
 }
-
-var userIdSequence = int64(1)
 
 type UserLoginResponse struct {
 	Response
@@ -66,14 +70,14 @@ func Register(c *gin.Context) {
 
 	token := username + password
 	user := User{}
-	if ret := DB.Where("username = ?", username).First(&user); ret.Error == nil {
+	if ret := DB.Where("token = ?", token).First(&user); ret.Error == nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "User already exist"},
 		})
 	} else {
-		atomic.AddInt64(&userIdSequence, 1)
+		atomic.AddInt64(&UserIdSequence, 1)
 		newUser := User{
-			Id:       userIdSequence,
+			Id:       UserIdSequence,
 			Name:     username,
 			Password: password,
 			Token:    token,
@@ -83,7 +87,7 @@ func Register(c *gin.Context) {
 		//usersLoginInfo[token] = newUser
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 0},
-			UserId:   userIdSequence,
+			UserId:   UserIdSequence,
 			Token:    username + password,
 		})
 	}
@@ -93,15 +97,15 @@ func Register(c *gin.Context) {
 	//		Response: Response{StatusCode: 1, StatusMsg: "User already exist"},
 	//	})
 	//} else {
-	//	atomic.AddInt64(&userIdSequence, 1)
+	//	atomic.AddInt64(&UserIdSequence, 1)
 	//	newUser := User{
-	//		Id:   userIdSequence,
+	//		Id:   UserIdSequence,
 	//		Name: username,
 	//	}
 	//	usersLoginInfo[token] = newUser
 	//	c.JSON(http.StatusOK, UserLoginResponse{
 	//		Response: Response{StatusCode: 0},
-	//		UserId:   userIdSequence,
+	//		UserId:   UserIdSequence,
 	//		Token:    username + password,
 	//	})
 	//}
@@ -114,7 +118,7 @@ func Login(c *gin.Context) {
 	token := username + password
 
 	var user = User{}
-	if ret := DB.Where("username = ? and password = ?", username, password).First(&user); ret.Error != nil {
+	if exist := DB.Where("toekn =  ?", token).First(&user); exist.Error != nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 0},
 			UserId:   user.Id,
