@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -17,11 +18,19 @@ type VideoListResponse struct {
 func Publish(c *gin.Context) {
 	token := c.PostForm("token")
 
-	if _, exist := usersLoginInfo[token]; !exist {
+	// 用户是否存在
+	user := model.User{}
+	res := db.DB.Where("username = ?", token).First(&user)
+	if res.Error != nil {
 		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
 		return
 	}
+	/*if _, exist := usersLoginInfo[token]; !exist {
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		return
+	}*/
 
+	// 接收数据
 	data, err := c.FormFile("data")
 	if err != nil {
 		c.JSON(http.StatusOK, model.Response{
@@ -31,8 +40,8 @@ func Publish(c *gin.Context) {
 		return
 	}
 
+	// 保存数据
 	filename := filepath.Base(data.Filename)
-	user := usersLoginInfo[token]
 	finalName := fmt.Sprintf("%d_%s", user.Id, filename)
 	saveFile := filepath.Join("./public/", finalName)
 	if err := c.SaveUploadedFile(data, saveFile); err != nil {
