@@ -12,6 +12,7 @@ func main() {
 	r := gin.Default()
 
 	initRouter(r)
+	//db.InitRedis()
 	db.InitDB()
 	defer db.CloseDB()
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")

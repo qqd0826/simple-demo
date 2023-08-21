@@ -4,6 +4,7 @@ import (
 	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"sync"
 )
@@ -35,10 +36,6 @@ type UserResponse struct {
 	User model.User `json:"user"`
 }
 
-// 后续修改
-func generateToken(username string) (token string) {
-	return username
-}
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
@@ -59,11 +56,14 @@ func Register(c *gin.Context) {
 		db.DB.Create(&newUser)
 		db.DB.Last(&newUser)
 		mutex.Unlock()
-
+		token, err := CreateToken(newUser.Id, newUser.Username)
+		if err != nil {
+			log.Fatal(err)
+		}
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: model.Response{StatusCode: 0},
 			UserId:   newUser.Id,
-			Token:    generateToken(newUser.Username),
+			Token:    token,
 		})
 	}
 
@@ -94,7 +94,10 @@ func Login(c *gin.Context) {
 
 	user := model.User{}
 	if res := db.DB.Where("username = ?", username).Where("password=?", password).First(&user); res.Error == nil {
-		token := generateToken(username)
+		token, err := CreateToken(user.Id, user.Username)
+		if err != nil {
+			log.Fatal(err)
+		}
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: model.Response{StatusCode: 0},
 			UserId:   user.Id,
@@ -122,8 +125,11 @@ func Login(c *gin.Context) {
 func UserInfo(c *gin.Context) {
 	token := c.Query("token")
 	user := model.User{}
-	//为了测试暂时将token改为username了，后续引入redis再作讨论
-	if res := db.DB.Where("username = ?", token).First(&user); res.Error == nil {
+	claims, err := ParseToken(token)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if res := db.DB.Where("id = ?", claims.UserId).First(&user); res.Error == nil {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: model.Response{StatusCode: 0},
 			User:     user,

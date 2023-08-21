@@ -18,13 +18,9 @@ type VideoListResponse struct {
 // Publish check token then save upload file to public directory
 func Publish(c *gin.Context) {
 	token := c.PostForm("token")
-
-	// 用户是否存在，目前token就是用户名
-	user := model.User{}
-	res := db.DB.Where("username = ?", token).First(&user)
-	if res.Error != nil {
-		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
-		return
+	claims, err := ParseToken(token)
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "请重新登录"})
 	}
 	/*if _, exist := usersLoginInfo[token]; !exist {
 		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
@@ -43,7 +39,7 @@ func Publish(c *gin.Context) {
 
 	// 保存数据
 	filename := filepath.Base(data.Filename)
-	finalName := fmt.Sprintf("%d_%s", user.Id, filename)
+	finalName := fmt.Sprintf("%d_%s", claims.UserId, filename)
 	saveFile := filepath.Join("./public/", finalName)
 	if err := c.SaveUploadedFile(data, saveFile); err != nil {
 		c.JSON(http.StatusOK, model.Response{
@@ -52,7 +48,8 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
-
+	var user model.User
+	db.DB.Where("id=?", claims.UserId).First(&user)
 	// 保存到数据库
 	newVideo := model.Video{
 		Author:     user,
