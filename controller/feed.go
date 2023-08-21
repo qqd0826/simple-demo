@@ -18,7 +18,7 @@ type FeedResponse struct {
 func Feed(c *gin.Context) {
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  model.Response{StatusCode: 0},
-		VideoList: getVideo(),
+		VideoList: DemoVideos,
 		NextTime:  time.Now().Unix(),
 	})
 }

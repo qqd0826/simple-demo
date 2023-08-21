@@ -18,6 +18,7 @@ type VideoListResponse struct {
 // Publish check token then save upload file to public directory
 func Publish(c *gin.Context) {
 	token := c.PostForm("token")
+	title := c.PostForm("title")
 
 	// 用户是否存在，目前token就是用户名
 	user := model.User{}
@@ -59,6 +60,7 @@ func Publish(c *gin.Context) {
 		PlayUrl:    saveFile,
 		CoverUrl:   saveFile,
 		UpLoadTime: time.Now().Unix(),
+		Title:      title,
 	}
 	db.DB.Create(&newVideo)
 
@@ -70,10 +72,13 @@ func Publish(c *gin.Context) {
 
 // PublishList all users have same publish video list
 func PublishList(c *gin.Context) {
-	c.JSON(http.StatusOK, VideoListResponse{
-		Response: model.Response{
-			StatusCode: 0,
-		},
-		VideoList: getVideo(),
-	})
+	token := c.Query("token")
+	user := model.User{}
+
+	if res := db.DB.Where("username = ?", token).First(&user); res.Error == nil {
+		c.JSON(http.StatusOK, VideoListResponse{
+			Response:  model.Response{StatusCode: 0},
+			VideoList: getVideo(),
+		})
+	}
 }

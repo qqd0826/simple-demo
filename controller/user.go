@@ -61,7 +61,7 @@ func Register(c *gin.Context) {
 		mutex.Unlock()
 
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: model.Response{StatusCode: 0},
+			Response: model.Response{StatusCode: 0, StatusMsg: "Registration successful"},
 			UserId:   newUser.Id,
 			Token:    generateToken(newUser.Username),
 		})
@@ -96,7 +96,7 @@ func Login(c *gin.Context) {
 	if res := db.DB.Where("username = ?", username).Where("password=?", password).First(&user); res.Error == nil {
 		token := generateToken(username)
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: model.Response{StatusCode: 0},
+			Response: model.Response{StatusCode: 0, StatusMsg: "登录成功"},
 			UserId:   user.Id,
 			Token:    token,
 		})
@@ -122,10 +122,11 @@ func Login(c *gin.Context) {
 func UserInfo(c *gin.Context) {
 	token := c.Query("token")
 	user := model.User{}
+
 	//为了测试暂时将token改为username了，后续引入redis再作讨论
 	if res := db.DB.Where("username = ?", token).First(&user); res.Error == nil {
 		c.JSON(http.StatusOK, UserResponse{
-			Response: model.Response{StatusCode: 0},
+			Response: model.Response{StatusCode: 0, StatusMsg: "Query success"},
 			User:     user,
 		})
 	} else {
