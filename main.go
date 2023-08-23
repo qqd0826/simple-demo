@@ -14,6 +14,7 @@ func main() {
 	initRouter(r)
 	//db.InitRedis()
 	db.InitDB()
+	db.InitOss()
 	defer db.CloseDB()
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
