@@ -123,10 +123,24 @@ func Publish(c *gin.Context) {
 
 // PublishList all users have same publish video list
 func PublishList(c *gin.Context) {
+	token := c.Query("token")
+	user_id := c.Query("user_id")
+
+	//查找token是否存在
+	user := model.User{}
+	res := db.DB.Where("username = ?", token).First(&user)
+	if res.Error != nil {
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		return
+	}
+
+	videos := []model.Video{}
+
+	db.DB.Order("up_load_time desc").Where("author_id = ?", user_id).Find(&videos)
 	c.JSON(http.StatusOK, VideoListResponse{
 		Response: model.Response{
 			StatusCode: 0,
 		},
-		VideoList: getVideo(),
+		VideoList: videos,
 	})
 }
