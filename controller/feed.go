@@ -24,6 +24,7 @@ func Feed(c *gin.Context) {
 }
 
 func getVideo() (videos []model.Video) {
-	db.DB.Find(&videos)
+	//按投稿时间倒序，限制30个
+	db.DB.Limit(30).Order("up_load_time desc").Find(&videos)
 	return
 }

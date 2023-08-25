@@ -48,9 +48,9 @@ func Publish(c *gin.Context) {
 	// yourEndpoint填写Bucket对应的Endpoint，以北京为例，填写为https://oss-cn-beijing.aliyuncs.com。其它Region请按实际情况填写。
 	// 阿里云账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM用户进行API访问或日常运维，请登录RAM控制台创建RAM用户。
 	client, err := oss.New(
-		"https://oss-cn-beijing.aliyuncs.com",
-		"LTAI5tDPiHQY8DXVUv25mhQH",
-		"ej9I1AAHc6OM7DP4W70W9l18074lrH",
+		"",
+		"",
+		"",
 	)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -80,6 +80,7 @@ func Publish(c *gin.Context) {
 
 	// 保存到数据库
 	newVideo := model.Video{
+		AuthorId:   user.Id,
 		Author:     user,
 		PlayUrl:    playurl,
 		CoverUrl:   coverurl,
