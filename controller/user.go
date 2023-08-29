@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"crypto/md5"
+	"fmt"
 	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gin-gonic/gin"
@@ -39,6 +41,10 @@ type UserResponse struct {
 func generateToken(username string) (token string) {
 	return username
 }
+
+func generateMd5(str string) string {
+	return fmt.Sprintf("%s", md5.Sum([]byte(str)))
+}
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
@@ -55,7 +61,7 @@ func Register(c *gin.Context) {
 		//var userCount int64
 		//db.DB.Model(&user).Count(&userCount)
 		//id数据库自增实现更好
-		newUser := model.User{Username: username, Name: username, Password: password}
+		newUser := model.User{Username: username, Name: username, Password: generateMd5(password)}
 		db.DB.Create(&newUser)
 		db.DB.Last(&newUser)
 		mutex.Unlock()
@@ -93,7 +99,7 @@ func Login(c *gin.Context) {
 	//token := username + password
 
 	user := model.User{}
-	if res := db.DB.Where("username = ?", username).Where("password=?", password).First(&user); res.Error == nil {
+	if res := db.DB.Where("username = ?", username).Where("password=?", generateMd5(password)).First(&user); res.Error == nil {
 		token := generateToken(username)
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: model.Response{StatusCode: 0, StatusMsg: "登录成功"},
