@@ -24,13 +24,9 @@ func FavoriteAction(c *gin.Context) {
 
 		if actionType == "1" {
 			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count + ?", 1))
+			db.DB.Model(&video).Update("is_favorite", true)
 		} else if actionType == "2" {
 			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count - ?", 1))
-		}
-
-		if video.FavoriteCount > 0 {
-			db.DB.Model(&video).Update("is_favorite", true)
-		} else {
 			db.DB.Model(&video).Update("is_favorite", false)
 		}
 	} else { // 不存在
