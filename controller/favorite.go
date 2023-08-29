@@ -42,10 +42,23 @@ func FavoriteAction(c *gin.Context) {
 
 // FavoriteList all users have same favorite video list
 func FavoriteList(c *gin.Context) {
+	token := c.Query("token")
+
+	//查找token是否存在
+	user := model.User{}
+	res := db.DB.Where("username = ?", token).First(&user)
+	if res.Error != nil {
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		return
+	}
+
+	videos := []model.Video{}
+	db.DB.Where("is_favorite = ?", true).Find(&videos)
+
 	c.JSON(http.StatusOK, VideoListResponse{
 		Response: model.Response{
 			StatusCode: 0,
 		},
-		VideoList: DemoVideos,
+		VideoList: videos,
 	})
 }
