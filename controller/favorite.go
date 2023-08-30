@@ -1,17 +1,20 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 // FavoriteAction no practical effect, just check if token is valid
 func FavoriteAction(c *gin.Context) {
 	token := c.Query("token")
-	videoId := c.Query("video_id")
+	videoId, _ := strconv.Atoi(c.Query("video_id"))
 	actionType := c.Query("action_type")
 
 	// 检验用户是否存在
@@ -20,14 +23,19 @@ func FavoriteAction(c *gin.Context) {
 		c.JSON(http.StatusOK, model.Response{StatusCode: 0})
 
 		var video model.Video
-		db.DB.Where("id = ?", videoId).First(&video)
+		db.DB.Where("id = ?", int64(videoId)).First(&video)
+
+		favoriteData := model.FavoriteData{UserId: user.Id, VideoId: int64(videoId)}
+		if db.DB.Where("user_id = ? and video_id = ?", user.Id, video.Id).Find(&favoriteData).RecordNotFound() {
+			db.DB.Create(&favoriteData)
+		}
 
 		if actionType == "1" {
-			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count + ?", 1))
-			db.DB.Model(&video).Update("is_favorite", true)
+			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count + 1"))
+			db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(model.FavoriteData{IsFavorite: true, Time: time.Now().Unix()})
 		} else if actionType == "2" {
-			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count - ?", 1))
-			db.DB.Model(&video).Update("is_favorite", false)
+			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count - 1"))
+			db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(map[string]interface{}{"user_id": user.Id, "video_id": video.Id, "IsFavorite": false, "Time": time.Now().Unix()})
 		}
 	} else { // 不存在
 		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "用户未登录，请先登录"})
@@ -46,14 +54,22 @@ func FavoriteList(c *gin.Context) {
 
 	//查找token是否存在
 	user := model.User{}
-	res := db.DB.Where("username = ?", token).First(&user)
-	if res.Error != nil {
+	if db.DB.Where("username = ?", token).First(&user).RecordNotFound() {
 		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
 		return
 	}
 
-	videos := []model.Video{}
-	db.DB.Where("is_favorite = ?", true).Find(&videos)
+	videos := make([]model.Video, 0)
+	favoriteData := make([]model.FavoriteData, 0)
+	db.DB.Where("is_favorite = ? and user_id = ?", true, user.Id).Find(&favoriteData)
+
+	videoIds := make([]int64, len(favoriteData))
+	for i := range favoriteData {
+		videoIds[i] = favoriteData[i].VideoId
+	}
+
+	db.DB.Find(&videos, videoIds)
+	fmt.Println(len(videos))
 
 	c.JSON(http.StatusOK, VideoListResponse{
 		Response: model.Response{

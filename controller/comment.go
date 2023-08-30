@@ -4,6 +4,7 @@ import (
 	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"net/http"
 	"strconv"
 	"time"
@@ -35,6 +36,7 @@ func CommentAction(c *gin.Context) {
 			// 插入数据
 			comment := model.Comment{User: user, UserId: user.Id, VideoId: int64(videoId), Content: text, CreateDate: strconv.Itoa(int(time.Now().Unix()))}
 			db.DB.Create(&comment)
+			db.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count + 1"))
 
 			c.JSON(http.StatusOK, CommentActionResponse{Response: model.Response{StatusCode: 0},
 				Comment: comment})
@@ -44,6 +46,7 @@ func CommentAction(c *gin.Context) {
 			db.DB.Where("id = ?", commentId).First(&comment)
 			if comment.UserId == user.Id {
 				db.DB.Delete(&comment)
+				db.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count - 1"))
 			}
 		}
 
