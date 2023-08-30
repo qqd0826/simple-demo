@@ -5,6 +5,13 @@ type Response struct {
 	StatusMsg  string `json:"status_msg,omitempty"`
 }
 
+type FavoriteData struct {
+	UserId     int64
+	VideoId    int64
+	IsFavorite bool
+	Time       int64
+}
+
 type Video struct {
 	Id            int64  `json:"id,omitempty"`
 	Author        User   `json:"author"`
@@ -20,7 +27,9 @@ type Video struct {
 
 type Comment struct {
 	Id         int64  `json:"id,omitempty"`
+	VideoId    int64  `json:"-"`
 	User       User   `json:"user"`
+	UserId     int64  `json:"-"`
 	Content    string `json:"content,omitempty"`
 	CreateDate string `json:"create_date,omitempty"`
 }
