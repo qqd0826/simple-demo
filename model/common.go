@@ -42,6 +42,9 @@ type User struct {
 	FollowerCount int64  `json:"follower_count,omitempty"`
 	IsFollow      bool   `json:"is_follow,omitempty"`
 	Password      string `json:"password,omitempty"` //密码
+
+	WorkCount     int64 `json:"work_count,omitempty"`     // 作品数量
+	FavoriteCount int64 `json:"favorite_count,omitempty"` // 点赞数量
 }
 
 type Message struct {

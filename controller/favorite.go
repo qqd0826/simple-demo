@@ -34,9 +34,11 @@ func FavoriteAction(c *gin.Context) {
 			// 更新两张表
 			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count + 1"))
 			db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(model.FavoriteData{IsFavorite: true, Time: time.Now().Unix()})
+			db.DB.Model(&user).Update("favorite_count", gorm.Expr("favorite_count + 1"))
 		} else if actionType == "2" { // 取消点赞
 			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count - 1"))
 			db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(map[string]interface{}{"user_id": user.Id, "video_id": video.Id, "IsFavorite": false, "Time": time.Now().Unix()})
+			db.DB.Model(&user).Update("favorite_count", gorm.Expr("favorite_count - 1"))
 		}
 	} else { // 不存在
 		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "用户未登录，请先登录"})

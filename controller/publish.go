@@ -6,6 +6,7 @@ import (
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -87,7 +88,10 @@ func Publish(c *gin.Context) {
 		UpLoadTime: time.Now().Unix(),
 		Title:      title,
 	}
+
 	db.DB.Create(&newVideo)
+	// 更新用户表中的视频数量
+	db.DB.Model(&user).Update("work_count", gorm.Expr("work_count + 1"))
 
 	c.JSON(http.StatusOK, model.Response{
 		StatusCode: 0,
