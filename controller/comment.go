@@ -36,16 +36,22 @@ func CommentAction(c *gin.Context) {
 			// 插入数据
 			comment := model.Comment{User: user, UserId: user.Id, VideoId: int64(videoId), Content: text, CreateDate: strconv.Itoa(int(time.Now().Unix()))}
 			db.DB.Create(&comment)
+
+			// 更新视频的评论数
 			db.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count + 1"))
 
 			c.JSON(http.StatusOK, CommentActionResponse{Response: model.Response{StatusCode: 0},
 				Comment: comment})
-		} else if actionType == "2" { // 删除评论
+		} else if actionType == "2" {
 			commentId, _ := strconv.Atoi(c.Query("comment_id"))
+
 			comment := model.Comment{}
 			db.DB.Where("id = ?", commentId).First(&comment)
+
+			// 检查评论用户ID和当前ID是否一致
 			if comment.UserId == user.Id {
 				db.DB.Delete(&comment)
+				// 更新视频的评论数
 				db.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count - 1"))
 			}
 		}

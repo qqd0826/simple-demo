@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gin-gonic/gin"
@@ -30,10 +29,12 @@ func FavoriteAction(c *gin.Context) {
 			db.DB.Create(&favoriteData)
 		}
 
+		// 点赞
 		if actionType == "1" {
+			// 更新两张表
 			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count + 1"))
 			db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(model.FavoriteData{IsFavorite: true, Time: time.Now().Unix()})
-		} else if actionType == "2" {
+		} else if actionType == "2" { // 取消点赞
 			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count - 1"))
 			db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(map[string]interface{}{"user_id": user.Id, "video_id": video.Id, "IsFavorite": false, "Time": time.Now().Unix()})
 		}
@@ -59,17 +60,19 @@ func FavoriteList(c *gin.Context) {
 		return
 	}
 
+	// 获取当前用户点赞信息
 	videos := make([]model.Video, 0)
 	favoriteData := make([]model.FavoriteData, 0)
 	db.DB.Where("is_favorite = ? and user_id = ?", true, user.Id).Find(&favoriteData)
 
+	// 获取点赞视频的ID
 	videoIds := make([]int64, len(favoriteData))
 	for i := range favoriteData {
 		videoIds[i] = favoriteData[i].VideoId
 	}
 
+	// 查找对应视频
 	db.DB.Find(&videos, videoIds)
-	fmt.Println(len(videos))
 
 	c.JSON(http.StatusOK, VideoListResponse{
 		Response: model.Response{
