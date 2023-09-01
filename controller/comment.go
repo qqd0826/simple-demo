@@ -28,37 +28,46 @@ func CommentAction(c *gin.Context) {
 
 	// 检验用户是否存在
 	user := model.User{}
-	if res := db.DB.Where("username = ?", token).First(&user); res.Error == nil {
-		// 评论
-		if actionType == "1" {
-			text := c.Query("comment_text")
-
-			// 插入数据
-			comment := model.Comment{User: user, UserId: user.Id, VideoId: int64(videoId), Content: text, CreateDate: strconv.Itoa(int(time.Now().Unix()))}
-			db.DB.Create(&comment)
-
-			// 更新视频的评论数
-			db.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count + 1"))
-
-			c.JSON(http.StatusOK, CommentActionResponse{Response: model.Response{StatusCode: 0},
-				Comment: comment})
-		} else if actionType == "2" {
-			commentId, _ := strconv.Atoi(c.Query("comment_id"))
-
-			comment := model.Comment{}
-			db.DB.Where("id = ?", commentId).First(&comment)
-
-			// 检查评论用户ID和当前ID是否一致
-			if comment.UserId == user.Id {
-				db.DB.Delete(&comment)
-				// 更新视频的评论数
-				db.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count - 1"))
-			}
-		}
-
-		c.JSON(http.StatusOK, model.Response{StatusCode: 0})
-	} else {
+	if res := db.DB.Where("username = ?", token).First(&user); res.Error != nil {
 		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "用户未登录，请先登录"})
+	}
+
+	// 评论
+	if actionType == "1" {
+		text := c.Query("comment_text")
+
+		// 插入数据
+		comment := model.Comment{
+			VideoId:    int64(videoId),
+			User:       user,
+			UserId:     user.Id,
+			Content:    text,
+			CreateDate: strconv.Itoa(int(time.Now().Unix())),
+		}
+		db.DB.Create(&comment)
+
+		// 更新视频的评论数
+		db.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count + 1"))
+
+		c.JSON(http.StatusOK, CommentActionResponse{Response: model.Response{StatusCode: 0},
+			Comment: comment,
+		})
+		return
+	} else if actionType == "2" {
+		//删除评论
+		commentId, _ := strconv.Atoi(c.Query("comment_id"))
+
+		comment := model.Comment{}
+		db.DB.Where("id = ?", commentId).First(&comment)
+
+		// 检查评论用户ID和当前ID是否一致
+		if comment.UserId == user.Id {
+			db.DB.Delete(&comment)
+			// 更新视频的评论数
+			db.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count - 1"))
+		}
+		c.JSON(http.StatusOK, model.Response{StatusCode: 0, StatusMsg: "评论删除成功"})
+		return
 	}
 
 	/*if user, exist := usersLoginInfo[token]; exist {
