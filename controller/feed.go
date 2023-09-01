@@ -17,14 +17,14 @@ type FeedResponse struct {
 // Feed same demo video list for every request
 func Feed(c *gin.Context) {
 	c.JSON(http.StatusOK, FeedResponse{
-		Response: model.Response{StatusCode: 0},
-		//VideoList: DemoVideos,
+		Response:  model.Response{StatusCode: 0},
 		VideoList: getVideo(),
 		NextTime:  time.Now().Unix(),
 	})
 }
 
 func getVideo() (videos []model.Video) {
-	db.DB.Find(&videos)
+	//按投稿时间倒序，限制30个
+	db.DB.Limit(30).Order("up_load_time desc").Find(&videos)
 	return
 }
