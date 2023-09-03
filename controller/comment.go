@@ -42,7 +42,7 @@ func CommentAction(c *gin.Context) {
 			User:       user,
 			UserId:     user.Id,
 			Content:    text,
-			CreateDate: strconv.Itoa(int(time.Now().Unix())),
+			CreateDate: time.Unix(time.Now().Unix(), 0).Format("2006-01-02 15:04:05"),
 		}
 		db.DB.Create(&comment)
 
@@ -96,11 +96,11 @@ func CommentList(c *gin.Context) {
 	comments := []model.Comment{}
 	db.DB.Order("create_date desc").Where("video_id = ?", videoId).Find(&comments)
 
-	// 日期格式化
-	for i := range comments {
-		data, _ := strconv.Atoi(comments[i].CreateDate)
-		comments[i].CreateDate = time.Unix(int64(data), 0).Format("2006-01-02 15:04:05")
-	}
+	//// 日期格式化
+	//for i := range comments {
+	//	data, _ := strconv.Atoi(comments[i].CreateDate)
+	//	comments[i].CreateDate = time.Unix(int64(data), 0).Format("2006-01-02 15:04:05")
+	//}
 
 	c.JSON(http.StatusOK, CommentListResponse{
 		Response:    model.Response{StatusCode: 0},
