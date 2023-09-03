@@ -41,8 +41,8 @@ func generateToken(username string) (token string) {
 	return username
 }
 
-// GetPwd 给密码加密
-func GetPassward(pwd string) (string, error) {
+// GetPassword 给密码加密
+func GetPassword(pwd string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -52,7 +52,7 @@ func GetPassward(pwd string) (string, error) {
 
 // CheckPassword 用于比对密码和哈希值是否匹配,如果匹配，则返回 true，否则返回 false。
 func CheckPassword(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(password), []byte(hash))
 	return err == nil
 }
 
@@ -70,7 +70,7 @@ func Register(c *gin.Context) {
 		mutex.Lock()
 
 		// encrypted : 已加密的密码
-		encrypted, _ := GetPassward(password)
+		encrypted, _ := GetPassword(password)
 		//var userCount int64
 		//db.DB.Model(&user).Count(&userCount)
 		//id数据库自增实现更好
