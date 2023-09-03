@@ -5,6 +5,7 @@ import (
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"net/http"
 	"sync"
 )
