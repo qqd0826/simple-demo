@@ -16,11 +16,36 @@ type FeedResponse struct {
 
 // Feed same demo video list for every request
 func Feed(c *gin.Context) {
+	token := c.Query("token")
+
+	//如果未登录，直接返回未点赞的video列表
+	user := model.User{}
+	if db.DB.Where("username = ?", token).First(&user).RecordNotFound() {
+		c.JSON(http.StatusOK, FeedResponse{
+			Response:  model.Response{StatusCode: 0},
+			VideoList: getVideo(),
+			NextTime:  time.Now().Unix(),
+		})
+		return
+	}
+
+	//feed流的video
+	feedVideo := getVideo()
+
+	favorite := model.FavoriteData{}
+	// 获取用户点赞视频，并把IsFavorite改为true
+	for i := range feedVideo {
+		favorite.IsFavorite = false
+		db.DB.Where("video_id = ? and user_id = ?", feedVideo[i].Id, user.Id).Find(&favorite)
+		feedVideo[i].IsFavorite = favorite.IsFavorite
+	}
+
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  model.Response{StatusCode: 0},
-		VideoList: getVideo(),
+		VideoList: feedVideo,
 		NextTime:  time.Now().Unix(),
 	})
+	return
 }
 
 func getVideo() (videos []model.Video) {
