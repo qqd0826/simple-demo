@@ -28,6 +28,11 @@ func VideoCommentCountDec(videoId int64) {
 func GetLastVideoList() []model.Video {
 	var videos []model.Video
 	db.DB.Limit(30).Order("up_load_time desc").Find(&videos)
+	for i := range videos {
+		author := GetUserById(videos[i].AuthorId)
+		author.Password = ""
+		videos[i].Author = author
+	}
 	return videos
 }
 func GetVideosByIdList(idList []int64) []model.Video {
