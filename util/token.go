@@ -1,7 +1,10 @@
-package controller
+package util
 
 import (
+	"github.com/RaymondCode/simple-demo/dao"
+	"github.com/RaymondCode/simple-demo/model"
 	"github.com/dgrijalva/jwt-go"
+	"log"
 	"time"
 )
 
@@ -66,4 +69,11 @@ func ParseToken(tokenString string) (*Claims, error) {
 	} else {
 		return nil, err
 	}
+}
+func GetUserByToken(tokenString string) model.User {
+	claims, err := ParseToken(tokenString)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dao.GetUserById(claims.UserId)
 }

@@ -3,6 +3,8 @@ package controller
 import (
 	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/model"
+	"github.com/RaymondCode/simple-demo/service"
+	"github.com/RaymondCode/simple-demo/util"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
@@ -13,18 +15,15 @@ import (
 // FavoriteAction no practical effect, just check if token is valid
 func FavoriteAction(c *gin.Context) {
 	token := c.Query("token")
-	videoId, _ := strconv.Atoi(c.Query("video_id"))
+	videoId, _ := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	actionType := c.Query("action_type")
 
 	// 检验用户是否存在
-	user := model.User{}
-	if res := db.DB.Where("username = ?", token).First(&user); res.Error == nil {
+	user := util.GetUserByToken(token)
+	if user.Id != 0 {
 		c.JSON(http.StatusOK, model.Response{StatusCode: 0})
-
-		var video model.Video
-		db.DB.Where("id = ?", int64(videoId)).First(&video)
-
-		favoriteData := model.FavoriteData{UserId: user.Id, VideoId: int64(videoId)}
+		video := service.GetVideoById(videoId)
+		favoriteData := model.FavoriteData{UserId: user.Id, VideoId: videoId}
 		if db.DB.Where("user_id = ? and video_id = ?", user.Id, video.Id).Find(&favoriteData).RecordNotFound() {
 			db.DB.Create(&favoriteData)
 		}
@@ -35,30 +34,26 @@ func FavoriteAction(c *gin.Context) {
 			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count + 1"))
 			db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(model.FavoriteData{IsFavorite: true, Time: time.Now().Unix()})
 			db.DB.Model(&user).Update("favorite_count", gorm.Expr("favorite_count + 1"))
+			db.Redis.Do("Hset", user.Id, videoId, 1)
+
 		} else if actionType == "2" { // 取消点赞
 			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count - 1"))
 			db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(map[string]interface{}{"user_id": user.Id, "video_id": video.Id, "IsFavorite": false, "Time": time.Now().Unix()})
 			db.DB.Model(&user).Update("favorite_count", gorm.Expr("favorite_count - 1"))
+			db.Redis.Do("Hset", user.Id, videoId, 0)
 		}
 	} else { // 不存在
-		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "用户未登录，请先登录"})
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "用户登录信息失效，请重新登录"})
 	}
-
-	//if _, exist := usersLoginInfo[token]; exist {
-	//	c.JSON(http.StatusOK, model.Response{StatusCode: 0})
-	//} else {
-	//	c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
-	//}
 }
 
 // FavoriteList all users have same favorite video list
 func FavoriteList(c *gin.Context) {
-	token := c.Query("token")
-
 	//查找token是否存在
-	user := model.User{}
-	if db.DB.Where("username = ?", token).First(&user).RecordNotFound() {
-		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+	token := c.Query("token")
+	user := util.GetUserByToken(token)
+	if user.Id == 0 {
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "请重新登录"})
 		return
 	}
 

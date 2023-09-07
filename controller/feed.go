@@ -1,8 +1,9 @@
 package controller
 
 import (
-	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/model"
+	"github.com/RaymondCode/simple-demo/service"
+	"github.com/RaymondCode/simple-demo/util"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
@@ -19,8 +20,8 @@ func Feed(c *gin.Context) {
 	token := c.Query("token")
 
 	//如果未登录，直接返回未点赞的video列表
-	user := model.User{}
-	if db.DB.Where("username = ?", token).First(&user).RecordNotFound() {
+	user := util.GetUserByToken(token)
+	if user.Id == 0 {
 		c.JSON(http.StatusOK, FeedResponse{
 			Response:  model.Response{StatusCode: 0},
 			VideoList: getVideo(),
@@ -30,15 +31,7 @@ func Feed(c *gin.Context) {
 	}
 
 	//feed流的video
-	feedVideo := getVideo()
-
-	favorite := model.FavoriteData{}
-	// 获取用户点赞视频，并把IsFavorite改为true
-	for i := range feedVideo {
-		favorite.IsFavorite = false
-		db.DB.Where("video_id = ? and user_id = ?", feedVideo[i].Id, user.Id).Find(&favorite)
-		feedVideo[i].IsFavorite = favorite.IsFavorite
-	}
+	feedVideo := service.GetFavoritVideoList(user.Id)
 
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  model.Response{StatusCode: 0},
@@ -50,6 +43,6 @@ func Feed(c *gin.Context) {
 
 func getVideo() (videos []model.Video) {
 	//按投稿时间倒序，限制30个
-	db.DB.Limit(30).Order("up_load_time desc").Find(&videos)
+	service.GetLastVideoList()
 	return
 }

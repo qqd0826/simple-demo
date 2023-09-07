@@ -1,13 +1,15 @@
 package controller
 
 import (
-	"github.com/RaymondCode/simple-demo/db"
+	"fmt"
+	"github.com/RaymondCode/simple-demo/dao"
 	"github.com/RaymondCode/simple-demo/model"
+	"github.com/RaymondCode/simple-demo/service"
+	"github.com/RaymondCode/simple-demo/util"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
-	"sync"
 )
 
 // usersLoginInfo use map to store user info, and key is username+password for demo
@@ -23,9 +25,6 @@ var usersLoginInfo = map[string]model.User{
 	},
 }
 
-// var userIdSequence = int64(1)
-var mutex sync.Mutex
-
 type UserLoginResponse struct {
 	model.Response
 	UserId int64  `json:"user_id,omitempty"`
@@ -35,11 +34,6 @@ type UserLoginResponse struct {
 type UserResponse struct {
 	model.Response
 	User model.User `json:"user"`
-}
-
-// 后续修改
-func generateToken(username string) (token string) {
-	return username
 }
 
 // GetPassword 给密码加密
@@ -62,25 +56,16 @@ func Register(c *gin.Context) {
 	password := c.Query("password")
 
 	// 检验数据是否存在
-	user := model.User{}
-	if res := db.DB.Where("username = ?", username).First(&user); res.Error == nil {
+	user := dao.GetUserByUsername(username)
+	if user.Id != 0 {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: model.Response{StatusCode: 1, StatusMsg: "User already exist"},
 		})
 	} else { // 不存在
-		mutex.Lock()
-
-		// encrypted : 已加密的密码
 		encrypted, _ := GetPassword(password)
-		//var userCount int64
-		//db.DB.Model(&user).Count(&userCount)
-		//id数据库自增实现更好
-
 		newUser := model.User{Username: username, Name: username, Password: encrypted}
-		db.DB.Create(&newUser)
-		db.DB.Last(&newUser)
-		mutex.Unlock()
-		token, err := CreateToken(newUser.Id, newUser.Username)
+		newUser = service.AddUserThenGet(newUser)
+		token, err := util.CreateToken(newUser.Id, newUser.Username)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -90,40 +75,25 @@ func Register(c *gin.Context) {
 			Token:    token,
 		})
 	}
-
-	/*if _, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: model.Response{StatusCode: 1, StatusMsg: "User already exist"},
-		})
-	} else {
-		atomic.AddInt64(&userIdSequence, 1)
-		newUser := model.User{
-			Id:   userIdSequence,
-			Name: username,
-		}
-		usersLoginInfo[token] = newUser
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: model.Response{StatusCode: 0},
-			UserId:   userIdSequence,
-			Token:    username + password,
-		})
-	}*/
 }
 
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 
-	//token := username + password
-
-	user := model.User{}
-	if res := db.DB.Where("username = ?", username).First(&user); res.Error != nil {
+	user := dao.GetUserByUsername(username)
+	if user.Id == 0 {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: model.Response{StatusCode: 1, StatusMsg: "用户不存在"},
 		})
 		return
 	}
-	token := generateToken(username)
+	token, err := util.CreateToken(user.Id, username)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	fmt.Println(token)
 	if CheckPassword(user.Password, password) {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: model.Response{StatusCode: 0, StatusMsg: "登录成功"},
@@ -153,29 +123,15 @@ func Login(c *gin.Context) {
 
 func UserInfo(c *gin.Context) {
 	token := c.Query("token")
-	user := model.User{}
-	claims, err := ParseToken(token)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if res := db.DB.Where("id = ?", claims.UserId).First(&user); res.Error == nil {
+	user := util.GetUserByToken(token)
+	if user.Id != 0 {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: model.Response{StatusCode: 0, StatusMsg: "Query success"},
 			User:     user,
 		})
 	} else {
 		c.JSON(http.StatusOK, UserResponse{
-			Response: model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+			Response: model.Response{StatusCode: 1, StatusMsg: "User doesn't exist-user"},
 		})
 	}
-	/*if user, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserResponse{
-			Response: model.Response{StatusCode: 0},
-			User:     user,
-		})
-	} else {
-		c.JSON(http.StatusOK, UserResponse{
-			Response: model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
-		})
-	}*/
 }

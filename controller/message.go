@@ -2,7 +2,9 @@ package controller
 
 import (
 	"fmt"
+	"github.com/RaymondCode/simple-demo/dao"
 	"github.com/RaymondCode/simple-demo/model"
+	"github.com/RaymondCode/simple-demo/util"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -25,7 +27,12 @@ func MessageAction(c *gin.Context) {
 	toUserId := c.Query("to_user_id")
 	content := c.Query("content")
 
-	if user, exist := usersLoginInfo[token]; exist {
+	user := util.GetUserByToken(token)
+	if user.Id == 0 {
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "请重新登录"})
+		return
+	} else {
+		user := dao.GetUserById(user.Id)
 		userIdB, _ := strconv.Atoi(toUserId)
 		chatKey := genChatKey(user.Id, int64(userIdB))
 
@@ -42,8 +49,6 @@ func MessageAction(c *gin.Context) {
 			tempChat[chatKey] = []model.Message{curMessage}
 		}
 		c.JSON(http.StatusOK, model.Response{StatusCode: 0})
-	} else {
-		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
 	}
 }
 
@@ -51,14 +56,13 @@ func MessageAction(c *gin.Context) {
 func MessageChat(c *gin.Context) {
 	token := c.Query("token")
 	toUserId := c.Query("to_user_id")
-
-	if user, exist := usersLoginInfo[token]; exist {
+	user := util.GetUserByToken(token)
+	if user.Id != 0 {
 		userIdB, _ := strconv.Atoi(toUserId)
 		chatKey := genChatKey(user.Id, int64(userIdB))
-
 		c.JSON(http.StatusOK, ChatResponse{Response: model.Response{StatusCode: 0}, MessageList: tempChat[chatKey]})
 	} else {
-		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist-message"})
 	}
 }
 

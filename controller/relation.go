@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/RaymondCode/simple-demo/model"
+	"github.com/RaymondCode/simple-demo/util"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -15,10 +16,11 @@ type UserListResponse struct {
 func RelationAction(c *gin.Context) {
 	token := c.Query("token")
 
-	if _, exist := usersLoginInfo[token]; exist {
+	user := util.GetUserByToken(token)
+	if user.Id != 0 {
 		c.JSON(http.StatusOK, model.Response{StatusCode: 0})
 	} else {
-		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist-relation"})
 	}
 }
 
@@ -28,7 +30,7 @@ func FollowList(c *gin.Context) {
 		Response: model.Response{
 			StatusCode: 0,
 		},
-		UserList: []model.User{DemoUser},
+		UserList: []model.User{model.DemoUser},
 	})
 }
 
@@ -38,7 +40,7 @@ func FollowerList(c *gin.Context) {
 		Response: model.Response{
 			StatusCode: 0,
 		},
-		UserList: []model.User{DemoUser},
+		UserList: []model.User{model.DemoUser},
 	})
 }
 
@@ -48,6 +50,6 @@ func FriendList(c *gin.Context) {
 		Response: model.Response{
 			StatusCode: 0,
 		},
-		UserList: []model.User{DemoUser},
+		UserList: []model.User{model.DemoUser},
 	})
 }

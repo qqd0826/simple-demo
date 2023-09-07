@@ -1,10 +1,6 @@
-package controller
+package model
 
-import (
-	"github.com/RaymondCode/simple-demo/model"
-)
-
-var DemoVideos = []model.Video{
+var DemoVideos = []Video{
 	{
 		Id:            1,
 		Author:        DemoUser,
@@ -16,7 +12,7 @@ var DemoVideos = []model.Video{
 	},
 }
 
-var DemoComments = []model.Comment{
+var DemoComments = []Comment{
 	{
 		Id:         1,
 		User:       DemoUser,
@@ -25,7 +21,7 @@ var DemoComments = []model.Comment{
 	},
 }
 
-var DemoUser = model.User{
+var DemoUser = User{
 	Id:            1,
 	Name:          "TestUser",
 	FollowCount:   0,

@@ -15,14 +15,14 @@ var (
 )
 
 func InitDB() {
-	/*connect := "root:123456@tcp(localhost:3306)/godb?charset=utf8&parseTime=True&loc=Local"
+	connect := "root:123456@tcp(localhost:3306)/godb?charset=utf8&parseTime=True&loc=Local"
 	db, err := gorm.Open("mysql", connect)
 	if err != nil {
 		log.Fatal(err)
-	}*/
+	}
 
-	connect := "server=127.0.0.1;port=1433;database=dy;user id=sa;password=963013"
-	db, err := gorm.Open("mssql", connect)
+	//connect := "server=127.0.0.1;port=1433;database=dy;userid=sa;password=963013"
+	//db, err := gorm.Open("mssql", connect)
 	if err != nil {
 		log.Fatal(err)
 	}
