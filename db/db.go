@@ -23,9 +23,9 @@ func InitDB() {
 
 	//connect := "server=127.0.0.1;port=1433;database=dy;userid=sa;password=963013"
 	//db, err := gorm.Open("mssql", connect)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 	DB = db
 	DB.AutoMigrate(&model.User{})
 	DB.AutoMigrate(&model.Video{})

@@ -47,7 +47,6 @@ func FavoriteAction(c *gin.Context) {
 	}
 }
 
-// FavoriteList all users have same favorite video list
 func FavoriteList(c *gin.Context) {
 	//查找token是否存在
 	token := c.Query("token")
@@ -58,18 +57,7 @@ func FavoriteList(c *gin.Context) {
 	}
 
 	// 获取当前用户点赞信息
-	videos := make([]model.Video, 0)
-	favoriteData := make([]model.FavoriteData, 0)
-	db.DB.Where("is_favorite = ? and user_id = ?", true, user.Id).Find(&favoriteData)
-
-	// 获取点赞视频的ID
-	videoIds := make([]int64, len(favoriteData))
-	for i := range favoriteData {
-		videoIds[i] = favoriteData[i].VideoId
-	}
-
-	// 查找对应视频
-	db.DB.Find(&videos, videoIds)
+	videos := service.GetFavoriteVideoList(user.Id)
 
 	c.JSON(http.StatusOK, VideoListResponse{
 		Response: model.Response{

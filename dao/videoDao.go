@@ -30,3 +30,8 @@ func GetLastVideoList() []model.Video {
 	db.DB.Limit(30).Order("up_load_time desc").Find(&videos)
 	return videos
 }
+func GetVideosByIdList(idList []int64) []model.Video {
+	var videos []model.Video
+	db.DB.Find(&videos, idList)
+	return videos
+}

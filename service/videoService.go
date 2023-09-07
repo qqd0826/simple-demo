@@ -48,7 +48,17 @@ func GetVideoById(id int64) model.Video {
 func GetLastVideoList() []model.Video {
 	return dao.GetLastVideoList()
 }
-func GetFavoritVideoList(userId int64) []model.Video {
+func GetFeedVideoList(userId int64) []model.Video {
 	feedVideo := GetLastVideoList()
 	return InitFavoriteVideo(feedVideo, userId)
+}
+func GetFavoriteVideoList(userId int64) []model.Video {
+	favoriteData := dao.GetUserFavoriteData(userId)
+	// 获取点赞视频的ID
+	videoIds := make([]int64, len(favoriteData))
+	for i := range favoriteData {
+		videoIds[i] = favoriteData[i].VideoId
+	}
+	// 查找对应视频
+	return dao.GetVideosByIdList(videoIds)
 }

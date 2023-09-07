@@ -73,7 +73,8 @@ func ParseToken(tokenString string) (*Claims, error) {
 func GetUserByToken(tokenString string) model.User {
 	claims, err := ParseToken(tokenString)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return model.User{}
 	}
 	return dao.GetUserById(claims.UserId)
 }

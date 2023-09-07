@@ -28,17 +28,17 @@ func Feed(c *gin.Context) {
 			NextTime:  time.Now().Unix(),
 		})
 		return
+	} else {
+		//feed流的video
+		feedVideo := service.GetFeedVideoList(user.Id)
+
+		c.JSON(http.StatusOK, FeedResponse{
+			Response:  model.Response{StatusCode: 0},
+			VideoList: feedVideo,
+			NextTime:  time.Now().Unix(),
+		})
+		return
 	}
-
-	//feed流的video
-	feedVideo := service.GetFavoritVideoList(user.Id)
-
-	c.JSON(http.StatusOK, FeedResponse{
-		Response:  model.Response{StatusCode: 0},
-		VideoList: feedVideo,
-		NextTime:  time.Now().Unix(),
-	})
-	return
 }
 
 func getVideo() (videos []model.Video) {
