@@ -9,7 +9,7 @@ import (
 
 func AddComment(videoId int64, user model.User, text string) model.Comment {
 	comment := model.Comment{
-		VideoId:    int64(videoId),
+		VideoId:    videoId,
 		User:       user,
 		UserId:     user.Id,
 		Content:    text,

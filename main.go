@@ -12,7 +12,7 @@ func main() {
 	r := gin.Default()
 
 	initRouter(r)
-	db.InitRedis()
+	//db.InitRedis()
 	db.InitDB()
 	db.InitOss()
 	defer db.CloseDB()

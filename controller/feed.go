@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/RaymondCode/simple-demo/service"
 	"github.com/RaymondCode/simple-demo/util"
@@ -18,18 +19,18 @@ type FeedResponse struct {
 // Feed same demo video list for every request
 func Feed(c *gin.Context) {
 	token := c.Query("token")
-
+	fmt.Println(token)
 	//如果未登录，直接返回未点赞的video列表
-	user := util.GetUserByToken(token)
-	if user.Id == 0 {
+	if len(token) == 0 || util.GetUserByToken(token).Id == 0 {
 		c.JSON(http.StatusOK, FeedResponse{
 			Response:  model.Response{StatusCode: 0},
 			VideoList: getVideo(),
 			NextTime:  time.Now().Unix(),
 		})
 		return
+
 	} else {
-		//feed流的video
+		user := util.GetUserByToken(token)
 		feedVideo := service.GetFeedVideoList(user.Id)
 
 		c.JSON(http.StatusOK, FeedResponse{
