@@ -1,15 +1,12 @@
 package controller
 
 import (
-	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/RaymondCode/simple-demo/service"
 	"github.com/RaymondCode/simple-demo/util"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 // FavoriteAction no practical effect, just check if token is valid
@@ -22,25 +19,24 @@ func FavoriteAction(c *gin.Context) {
 	user := util.GetUserByToken(token)
 	if user.Id != 0 {
 		c.JSON(http.StatusOK, model.Response{StatusCode: 0})
-		video := service.GetVideoById(videoId)
-		favoriteData := model.FavoriteData{UserId: user.Id, VideoId: videoId}
-		if db.DB.Where("user_id = ? and video_id = ?", user.Id, video.Id).Find(&favoriteData).RecordNotFound() {
-			db.DB.Create(&favoriteData)
-		}
+		//video := service.GetVideoById(videoId)
+		////favoriteData := model.FavoriteData{UserId: user.Id, VideoId: videoId}
+		////if db.DB.Where("user_id = ? and video_id = ?", user.Id, video.Id).Find(&favoriteData).RecordNotFound() {
+		////	db.DB.Create(&favoriteData)
+		////}
 
 		// 点赞
 		if actionType == "1" {
 			// 更新两张表
-			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count + 1"))
-			db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(model.FavoriteData{IsFavorite: true, Time: time.Now().Unix()})
-			db.DB.Model(&user).Update("favorite_count", gorm.Expr("favorite_count + 1"))
-			db.Redis.Do("Hset", user.Id, videoId, 1)
-
+			//db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count + 1"))
+			//db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(model.FavoriteData{IsFavorite: true, Time: time.Now().Unix()})
+			//db.DB.Model(&user).Update("favorite_count", gorm.Expr("favorite_count + 1"))
+			util.Write(user.Id, videoId, true)
 		} else if actionType == "2" { // 取消点赞
-			db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count - 1"))
-			db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(map[string]interface{}{"user_id": user.Id, "video_id": video.Id, "IsFavorite": false, "Time": time.Now().Unix()})
-			db.DB.Model(&user).Update("favorite_count", gorm.Expr("favorite_count - 1"))
-			db.Redis.Do("Hset", user.Id, videoId, 0)
+			//db.DB.Model(&video).Update("favorite_count", gorm.Expr("favorite_count - 1"))
+			//db.DB.Model(&favoriteData).Where("user_id = ? and video_id = ?", user.Id, video.Id).Updates(map[string]interface{}{"user_id": user.Id, "video_id": video.Id, "IsFavorite": false, "Time": time.Now().Unix()})
+			//db.DB.Model(&user).Update("favorite_count", gorm.Expr("favorite_count - 1"))
+			util.Write(user.Id, videoId, false)
 		}
 	} else { // 不存在
 		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "用户登录信息失效，请重新登录"})

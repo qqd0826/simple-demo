@@ -19,14 +19,15 @@ type FeedResponse struct {
 // Feed same demo video list for every request
 func Feed(c *gin.Context) {
 	token := c.Query("token")
-	fmt.Println(token)
+	user := util.GetUserByToken(token)
 	//如果未登录，直接返回未点赞的video列表
-	if len(token) == 0 || util.GetUserByToken(token).Id == 0 {
+	if user.Id == 0 {
 		c.JSON(http.StatusOK, FeedResponse{
 			Response:  model.Response{StatusCode: 0},
 			VideoList: getVideo(),
 			NextTime:  time.Now().Unix(),
 		})
+		fmt.Println(len(getVideo()))
 		return
 
 	} else {
@@ -44,6 +45,6 @@ func Feed(c *gin.Context) {
 
 func getVideo() (videos []model.Video) {
 	//按投稿时间倒序，限制30个
-	service.GetLastVideoList()
-	return
+	return service.GetLastVideoList()
+
 }

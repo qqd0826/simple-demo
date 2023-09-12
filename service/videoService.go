@@ -44,6 +44,7 @@ func GetUserLastVideoList(userId int64) []model.Video {
 }
 func GetVideoById(id int64) model.Video {
 	return dao.GetVideoById(id)
+
 }
 func GetLastVideoList() []model.Video {
 	return dao.GetLastVideoList()
@@ -53,12 +54,70 @@ func GetFeedVideoList(userId int64) []model.Video {
 	return InitFavoriteVideo(feedVideo, userId)
 }
 func GetFavoriteVideoList(userId int64) []model.Video {
+
 	favoriteData := dao.GetUserFavoriteData(userId)
-	// 获取点赞视频的ID
+	videoIds := getVideoIdsByFavorite(favoriteData)
+	videos := dao.GetVideosByIdList(videoIds)
+	fmt.Println(videoIds)
+	favoriteDataFromRedis := dao.GetLikeInfo(userId)
+	fmt.Print(len(favoriteDataFromRedis), favoriteDataFromRedis)
+	allVideo := make([]model.Video, len(videos))
+	duplicateFlag := make([]bool, len(favoriteDataFromRedis))
+	for i := range videos {
+		for j := range favoriteDataFromRedis {
+			fmt.Println(j, favoriteDataFromRedis[j].VideoId)
+			if videos[i].Id == favoriteDataFromRedis[j].VideoId {
+				if favoriteDataFromRedis[j].IsFavorite {
+					videos[i].FavoriteCount++
+				} else {
+					videos[i].FavoriteCount--
+				}
+				duplicateFlag[j] = true
+			}
+		}
+	}
+	allVideo = append(allVideo, videos...)
+	for i := range favoriteDataFromRedis {
+		if duplicateFlag[i] == false {
+			video := dao.GetVideoById(favoriteDataFromRedis[i].VideoId)
+			if favoriteDataFromRedis[i].IsFavorite {
+				video.FavoriteCount++
+			} else {
+				video.FavoriteCount--
+			}
+			allVideo = append(allVideo, video)
+		}
+
+	}
+	return allVideo
+}
+func getVideoIdsByVideos(videos []model.Video) []int64 {
+	videoIds := make([]int64, len(videos))
+	for i := range videos {
+		videoIds[i] = videos[i].Id
+	}
+	return videoIds
+}
+func getVideoIdsByFavorite(favoriteData []model.FavoriteData) []int64 {
 	videoIds := make([]int64, len(favoriteData))
 	for i := range favoriteData {
 		videoIds[i] = favoriteData[i].VideoId
 	}
-	// 查找对应视频
-	return dao.GetVideosByIdList(videoIds)
+	return videoIds
+}
+func mergeAndDeduplicate(ids1 []int64, ids2 []int64) {
+	result := make([]int64, len(ids1))
+	result = append(result, ids1...)
+	for j := range ids2 {
+		flag := false
+		for i := range result {
+			if result[i] == ids2[j] {
+				flag = true
+				break
+			}
+		}
+		if flag == false {
+			result = append(result, ids2[j])
+		}
+	}
 }

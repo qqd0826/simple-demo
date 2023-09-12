@@ -19,9 +19,11 @@ func GetVideoById(id int64) model.Video {
 	db.DB.Where("id = ?", id).First(&video)
 	return video
 }
+
 func VideoCommentCountInt(videoId int64) {
 	db.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count + 1"))
 }
+
 func VideoCommentCountDec(videoId int64) {
 	db.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count - 1"))
 }

@@ -24,7 +24,7 @@ func CreateToken(id int64, username string) (string, error) {
 		UserName: username,
 		StandardClaims: jwt.StandardClaims{
 			//Audience:  "app项目",                              //颁发给谁，就是使用的一方
-			ExpiresAt: time.Now().Add(time.Hour * 1).Unix(), //过期时间,暂设为1小时
+			ExpiresAt: time.Now().Add(time.Hour * 5).Unix(), //过期时间,暂设为1小时
 			//Id:        "",//非必填
 			IssuedAt: time.Now().Unix(), //颁发时间
 			Issuer:   "dousheng",        //颁发者
@@ -71,10 +71,14 @@ func ParseToken(tokenString string) (*Claims, error) {
 	}
 }
 func GetUserByToken(tokenString string) model.User {
-	claims, err := ParseToken(tokenString)
-	if err != nil {
-		log.Println(err)
+	if len(tokenString) == 0 {
 		return model.User{}
+	} else {
+		claims, err := ParseToken(tokenString)
+		if err != nil {
+			log.Println(err)
+			return model.User{}
+		}
+		return dao.GetUserById(claims.UserId)
 	}
-	return dao.GetUserById(claims.UserId)
 }

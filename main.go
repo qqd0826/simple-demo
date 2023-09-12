@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/RaymondCode/simple-demo/db"
 	"github.com/RaymondCode/simple-demo/service"
+	"github.com/RaymondCode/simple-demo/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,9 +13,10 @@ func main() {
 	r := gin.Default()
 
 	initRouter(r)
-	//db.InitRedis()
+	db.InitRedis()
 	db.InitDB()
 	db.InitOss()
+	util.SyncFavorite()
 	defer db.CloseDB()
 	err := r.Run()
 	if err != nil {
